@@ -32,6 +32,8 @@ To test out how [Cross-Zone Load Balancing](https://aws.amazon.com/about-aws/wha
 
 With that setup, we will then send requests to a load balancer elastic IP, ensuring that the load is balanced between the two application.
 
+![Demo-Setup](doc/nlb-demo-test.png)
+
 ### Instructions
 
 1. Create two EC2 (Amazon AMI) in a single region in 
@@ -76,3 +78,6 @@ This solves the problem that provided a limitation of a single static IP address
 
 
 
+202-461-5679
+810-Vermont Avenue
+Closes at 5pm
