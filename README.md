@@ -34,22 +34,26 @@ With that setup, we will then send requests to a load balancer elastic IP, ensur
 
 ### Instructions
 
-1. Create two EC2 (Amazon AMI) in a single region in two availability zone.
+1. Create two EC2 (Amazon AMI) in a single region in 
+two availability zone.  
+![ec2-setup](doc/ec2-setup.png)
 1. SSH into each of the EC2 instance, and run `install-docker.sh` to install docker. 
 1. Run `install-run-app.sh` in the EC2 instance to run the app.
 1. Create a target group on those two EC2 instances.
 1. Create and provision a [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html) on this target group. It should be public-facing, and utilize two availability zone.
+![crosszone-lb](doc/crosszone-loadbalancer.png)
 1. Create a security group and allow port 80 from the [private IP in the NLB to whitelist](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-register-targets.html).
 1. Put the security group on the two EC2 instances.
 1. Ensure Cross Zone Load Balancing is off (off by default).
 1. Look up the load balancer's DNS record by running `dig @8.8.8.8 +short <nlb-name>.elb.us-east-1.amazonaws.com`. You should now have two static IP addresses (one per subnet).
-1. Hit a static IP with curl request `watch curl -v http://<nlb-name>.elb.us-east-1.amazonaws.com/` and verify that due to cross zone load balancing being off, and that the DNS that load balancer relies on is [fairly sticky](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/), one server is being hit most of the time. You may repeat this test with the other static IP.
+1. Hit a static IP with curl request `watch curl <IP address>` or use `sh verify-curl.sh <IP address>` to verify that with cross zone load balancing off, the load balancer will [mostly forward to one server](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/). You may repeat this test with the other static IP.
 
 1. SSH into the instance that the curl request is hitting most of the time, and shut down the application with `sh install-shutdown-docker.sh`.
 
 1. You should now see a lot of requests failing before the load balancer wakes up and pushes it to the other server. Run `install-run-app.sh` to turn the application back on.
 
 1. Turn on [Cross-Zone Load Balancing](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing) in the options of the Network Load Balancer, and wait a minute (testing shows it takes about 30 to a minute for the option to kick in).
+![Cross-Zone-LB-on](doc/crosszone-lb-aws-on.png)
 
 1. Now repeat the test on sending requests on a provided static IP. The requests should now be roughly balanced and sent to both instances. Verify that requests to both static IPs hit both instances. 
 
@@ -57,6 +61,18 @@ With that setup, we will then send requests to a load balancer elastic IP, ensur
 
 ## Results
 
+### Cross-Zone Load Balance Off ###
+
+![crosszone-lb-off](doc/crosszone-lb-off.png)
+
+### Cross-Zone Load Balance On ###
+
+![crosszone-lb-on](doc/crosszone-lb-on.png)
+
+### Take away
 The biggest take away here is that [when cross-zone load balancing is enabled, each load balancer node distributes traffic across the registered targets in all enabled Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing).
 
 This solves the problem that provided a limitation of a single static IP address, we can still achieve high availability and balance the load correctly when failing over.
+
+
+
