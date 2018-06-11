@@ -75,9 +75,3 @@ two availability zone.
 The biggest take away here is that [when cross-zone load balancing is enabled, each load balancer node distributes traffic across the registered targets in all enabled Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html#cross-zone-load-balancing).
 
 This solves the problem that provided a limitation of a single static IP address, we can still achieve high availability and balance the load correctly when failing over.
-
-
-
-202-461-5679
-810-Vermont Avenue
-Closes at 5pm
