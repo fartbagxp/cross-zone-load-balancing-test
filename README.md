@@ -1,4 +1,29 @@
-# Overview
+# When to use cross-zone load balancing?
+
+* Load needs to be better balanced for traffic provisioning.
+
+    By default, load balancers tend to prefer sending traffic to a particular destination due to [DNS caches](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/). It fails over at the same rate, regardless of cross-zone load balancing. 
+    
+    In practice, when cross-zone load balancing is turned on, traffic routed from the load balancer to each of the destination servers in different availability zones will be balanced. Without it, the load balancer will prefer whichever server DNS resolves to first.
+
+* Project requires slightly less failure rates upon failover.
+
+    With cross-zone load balancing turned on, if one of two servers failed, error rates for incoming requests would be 50%, until the unhealthy host is taken out.
+
+    With cross-zone load balancing turned off, and the cached DNS points to the server that failed (which is usually the case), the failure rates would be 100% until the unhealthy host is taken out.
+
+    In practice, the unhealthy host usually takes about 1-60 seconds to be cycled out.
+
+* Network Restriction / Network Policies.
+
+    Perhaps due to some policy restriction, you're only allowed to provide one elastic IP for the load balancer. 
+    
+    For [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html), there are one Elastic IP address for each availability zone. If you use just one IP address, it ensures only one availability zone would receive traffic, and that defeats the purpose of having multiple availability zones.
+
+    By turning on [cross-zone load balancing](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/), each of the elastic IP provided, is capable of routing to the other availability zone. This means that even with the limitation of using a single elastic IP, we can route traffic to multiple availability zones.
+
+
+## Problem Statement
 
 Recently, somebody asked me about what [Cross-Zone Load Balancing](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/) on [AWS](https://aws.amazon.com) actually do, and whether it'll help solve a particular problem for them.
 
@@ -22,17 +47,13 @@ In AWS, we may put an application in multiple different regions, and within thos
 
 The [Regions & Availiability Zones](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html) article explains this in great detail.
 
-#### Why use crosszone load balancing?
-
-DNS cache on the Network Load Balancer. Traffic is preferred on one server.
-
 ## Testing
 
 To test out how [Cross-Zone Load Balancing](https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/) interacts with [Network Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html), I hosted two identical web applications in two availability zone, and created a network load balancer forwarding traffic to the applications as a target group.
 
 With that setup, we will then send requests to a load balancer elastic IP, ensuring that the load is balanced between the two application.
 
-![Demo-Setup](doc/nlb-demo-test.png)
+![Demo-Setup](doc/nlb-demo-setup.png)
 
 ### Instructions
 
